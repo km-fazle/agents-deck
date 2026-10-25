@@ -672,6 +672,13 @@ static void action_clicked(lv_event_t *e)
 	agents_unlock();
 }
 
+// Orca, herdr and cmux take an answer and an interrupt. Cursor and a remote
+// feed only open a page.
+static int app_answers(const char *app)
+{
+	return strcmp(app, "orca") == 0 || strcmp(app, "herdr") == 0 || strcmp(app, "cmux") == 0;
+}
+
 static lv_obj_t *button(lv_obj_t *parent, const char *text, bool solid, action_kind_t kind, const char *key)
 {
 	if (button_action_n >= (int)(sizeof button_actions / sizeof button_actions[0]))
@@ -933,9 +940,16 @@ static void draw_card(const agentsdeck_link_v1_Agent *a)
 	// Actions.
 	lv_obj_t *gap = box(card_body);
 	lv_obj_set_size(gap, 1, 8);
-	if (a->status != agentsdeck_link_v1_Status_STATUS_EXITED)
-		button(card_body, hungry(a) ? "review in terminal" : "focus terminal", !waiting, ACTION_FOCUS, NULL);
-	if (a->status == agentsdeck_link_v1_Status_STATUS_RUNNING && (!a->external || a->app[0]))
+	if (a->status != agentsdeck_link_v1_Status_STATUS_EXITED) {
+		char focus[32];
+		const char *focus_lbl = hungry(a) ? "review in terminal" : "focus terminal";
+		if (a->app[0] && !app_answers(a->app)) {
+			snprintf(focus, sizeof focus, "open in %s", a->app);
+			focus_lbl = focus;
+		}
+		button(card_body, focus_lbl, !waiting, ACTION_FOCUS, NULL);
+	}
+	if (a->status == agentsdeck_link_v1_Status_STATUS_RUNNING && (!a->external || app_answers(a->app)))
 		button(card_body, "interrupt", false, ACTION_INTERRUPT, NULL);
 
 	lv_obj_update_layout(card_body);

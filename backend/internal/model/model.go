@@ -53,7 +53,7 @@ type Agent struct {
 	Lost        bool       `json:"lost,omitempty"`      // ended with the tmux server, not by itself: POST /v1/restore brings it back
 	Unseen      bool       `json:"unseen"`              // finished a turn you haven't looked at yet ("hungry")
 	External    bool       `json:"external"`            // owned by another app (Codex): view and focus only
-	App         string     `json:"app,omitempty"`       // the app it runs in when not agentctl's: "orca", "herdr", "cmux" (answer, interrupt and focus work there)
+	App         string     `json:"app,omitempty"`       // the app it runs in when not agentctl's: "orca", "herdr", "cmux" (answer, interrupt and focus work there), "cursor", or a remote feed ("grok": focus opens its page; answer and interrupt are refused)
 	Subagents   []Subagent `json:"subagents,omitempty"` // subagents still working, oldest first
 	Hat         *Hat       `json:"hat,omitempty"`       // the pixel hat for its working folder (nil: none)
 	Account     *Account   `json:"account,omitempty"`   // the Claude account it runs in (nil: only one account is set up)

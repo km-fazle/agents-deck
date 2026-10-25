@@ -48,11 +48,12 @@ Test it against a fake: a socket in a temp folder (`herdr_test.go`, `cmux_test.g
 
 - `Watch<Name>()` polls every 2 seconds. It returns at once when `config.json` has `"<name>": false`:
   add the switch to `Config` in `daemon.go` and start the watcher in `cmd/agentctl/main.go` next to the
-  others.
+  others. A remote API is the exception: Cursor and the remote feed poll about every 20 seconds, and
+  wait longer after a 429 or a 5xx, so a status board doesn't burn a rate limit.
 - `sync<Name>()` puts the harness's agents on the board and takes off the ones that are gone. Each agent
   is a `store.Entry` with `External: true` and `A.App` set to the harness's name (11 characters at most:
   Deck Link carries it in 12 bytes). Its id is a letter plus the start of a SHA-256 of the agent's stable
-  key; the letters in use are `h` herdr, `l` sessions added by hand, `m` cmux, `o` Orca.
+  key; the letters in use are `c` Cursor, `h` herdr, `l` sessions added by hand, `m` cmux, `o` Orca, `r` a remote feed, `x` Codex.
 - Map the harness's state onto the agent:
   - working: `model.Running`, with `A.Activity` set to the tool call from the transcript;
   - waiting for you: `model.Waiting`, with `A.Waiting` set to the prompt. `screenPrompt` (in
@@ -75,8 +76,10 @@ Add a case for the harness's name with four functions:
 | `focus(e)` | shows the agent's terminal in the harness and brings the harness forward; clears `A.Unseen` |
 | `hide(e)` | takes the agent off the deck until its state changes; it keeps running in the harness |
 
-The web dashboard, the menu bar app, the desk panel and the boards need no changes: they show
-**open in &lt;name&gt;** for any agent with `app` set.
+The web dashboard, the menu bar app, the desk panel and the boards show
+**open in &lt;name&gt;** for any agent with `app` set. Answer and interrupt are offered for
+Orca, herdr and cmux. A read-only harness (Cursor, a remote feed) still sets `app`, and
+those two actions stay hidden; the handlers return an error if something calls them anyway.
 
 ### 4. Contract and docs
 

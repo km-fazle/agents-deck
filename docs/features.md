@@ -111,6 +111,65 @@ daemon uses the socket methods `surface.read_text`, `surface.send_text`, `surfac
 `surface.focus` and `system.identify`. Codex sessions in cmux aren't mirrored yet. `config.json`:
 `"cmux": false` turns it off.
 
+### Cursor cloud agents
+
+Cloud agents from [Cursor](https://cursor.com) show up next to the sessions on this Mac: the name, the repo and branch, what it's doing, and a pull request link when it has one. **Open in cursor** opens that agent's page. The deck can't type into a cloud agent, so answer and interrupt stay hidden.
+
+The list comes from `GET https://api.cursor.com/v0/agents`. That legacy list is still the one that returns status, repository, branch, page and pull request in a single response. The current v1 API splits a durable agent from its runs, and reading all of that for every agent would spend the API's rate limit. The deck polls about every 20 seconds, and waits longer after a 429 or a 5xx.
+
+Status from the API maps onto the tiles like this:
+
+| API | tile |
+|---|---|
+| `CREATING` | starting |
+| `RUNNING`, and v1's `ACTIVE` | working |
+| a status that asks for you (`NEEDS_INPUT`, and anything with "wait" or "input" in the name) | needs you |
+| `FINISHED`, `CANCELLED`, `EXPIRED`, `ARCHIVED`, v1's `IDLE` | done |
+| `ERROR` | error |
+| anything else | done, not working |
+
+Running agents stay on the board. Finished ones stay for 24 hours (`cursorWindowHours`). The time on the tile is `updatedAt` when the API sends it, otherwise `createdAt`.
+
+The Cursor IDE on this Mac is not read. Cloud agents are the ones with a status API. A later change could look for a local IDE session list if Cursor publishes one.
+
+Create a user API key at Cursor Dashboard → API Keys (or use a service account key). Put it in the environment, not in a file you might copy:
+
+```bash
+export CURSOR_API_KEY=…    # the daemon reads this at startup; restart it after
+```
+
+`config.json` (in the deck's data directory, `~/.local/share/agents-terminal/config.json`) can name a different variable, or hold the key itself. The environment wins when both are set. The key is sent only to `api.cursor.com`, as Basic auth, and it is never logged. A `cursorBaseUrl` that is not that host is refused.
+
+```json
+{
+  "cursor": true,
+  "cursorApiKeyEnv": "CURSOR_API_KEY",
+  "cursorPollSeconds": 20,
+  "cursorWindowHours": 24
+}
+```
+
+`"cursor": false` turns it off. `cursorPollSeconds` is never under 10. A negative `cursorWindowHours` shows every finished agent the list returns.
+
+### Remote feed (Grok bots)
+
+Grok bots have no public status API. The deck polls a JSON document you publish — an https URL, or a file on this machine — and shows one tile per agent, labelled with the source name (default **Grok**). **Open in grok** opens the agent's `open_url` when it has one. Answer and interrupt stay hidden.
+
+A working agent whose `last_activity` is older than the stale threshold, or a feed the deck has not refreshed in that long, shows as **stale** instead of working. Idle and error rows in a fresh feed keep their status. The shape of the file is [remote-feed.md](remote-feed.md), and `docs/fixtures/remote-feed.json` is an example.
+
+```json
+{
+  "remoteFeed": {
+    "name": "Grok",
+    "path": "docs/fixtures/remote-feed.json",
+    "pollSeconds": 20,
+    "staleSeconds": 180
+  }
+}
+```
+
+A relative `path` is from the directory you start the daemon in. Use `url` instead of `path` for an https document. A bearer token, when the feed wants one, goes in `REMOTE_FEED_TOKEN` (or `tokenEnv`). The token is not logged. `"enabled": false` turns the feed off. With no `remoteFeed` block, nothing is polled.
+
 ## Claude sessions started elsewhere
 
 Claude Code sessions you start by hand in any terminal (plain `claude`) can join the deck too. Tap a free cell (or **+ session** on the web dashboard, or `agentctl live` / `agentctl add <session>`) to see them and add one; it lands in that cell.

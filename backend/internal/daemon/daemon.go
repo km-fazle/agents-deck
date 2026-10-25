@@ -38,10 +38,60 @@ type Config struct {
 	// Cmux: mirror Claude agents running in cmux onto the board (default on;
 	// cmux's socket access must be Automation).
 	Cmux *bool `json:"cmux"`
+	// Cursor: mirror Cursor cloud agents onto the board (default on when an
+	// API key is set; "cursor": false turns it off).
+	Cursor *bool `json:"cursor"`
+	// CursorAPIKey is a Cloud Agents API key. Prefer the environment
+	// (CursorAPIKeyEnv, default CURSOR_API_KEY) so the key is not in this
+	// file. The key is never logged.
+	CursorAPIKey string `json:"cursorApiKey,omitempty"`
+	// CursorAPIKeyEnv names the environment variable that holds the key
+	// (default CURSOR_API_KEY). When that variable is set it wins over
+	// CursorAPIKey.
+	CursorAPIKeyEnv string `json:"cursorApiKeyEnv,omitempty"`
+	// CursorPollSeconds is the pause between polls (default 20, never under 10).
+	// A 429 or a 5xx waits longer.
+	CursorPollSeconds int `json:"cursorPollSeconds,omitempty"`
+	// CursorWindowHours: finished agents whose last activity falls inside this
+	// many hours stay on the board (default 24). Running agents always stay.
+	// Negative means no age limit.
+	CursorWindowHours float64 `json:"cursorWindowHours,omitempty"`
+	// CursorBaseURL overrides the API host. Empty means
+	// https://api.cursor.com. Any other host is refused, so the API key
+	// cannot be sent somewhere else. Loopback is accepted for tests.
+	CursorBaseURL string `json:"cursorBaseUrl,omitempty"`
+	// RemoteFeed mirrors agents from a JSON status feed. Nil, or enabled
+	// false, or neither url nor path: off.
+	RemoteFeed *RemoteFeedConfig `json:"remoteFeed,omitempty"`
 	// CodexWindowHours: threads updated within this many hours are shown (default 6).
 	CodexWindowHours float64 `json:"codexWindowHours"`
 	// ExitedTTLSeconds: how long exited agents stay visible (0 = 10 min, <0 = forever).
 	ExitedTTLSeconds int `json:"exitedTTLSeconds"`
+}
+
+// RemoteFeedConfig is a JSON status feed (a Grok bot list, or the same shape
+// from anywhere else). See docs/remote-feed.md.
+type RemoteFeedConfig struct {
+	// Enabled turns the feed off without removing it. Nil means on, as long
+	// as URL or Path is set.
+	Enabled *bool `json:"enabled,omitempty"`
+	// Name is the label on the tiles (default "Grok").
+	Name string `json:"name,omitempty"`
+	// URL is an https document. When set, Path is not read.
+	URL string `json:"url,omitempty"`
+	// Path is a local JSON file, used when URL is empty.
+	Path string `json:"path,omitempty"`
+	// Token is a bearer token for URL. Prefer TokenEnv so it is not stored here.
+	Token string `json:"token,omitempty"`
+	// TokenEnv names the environment variable that holds the bearer token
+	// (default REMOTE_FEED_TOKEN). When that variable is set it wins over Token.
+	TokenEnv string `json:"tokenEnv,omitempty"`
+	// PollSeconds is the pause between reads (default 20, never under 10).
+	PollSeconds int `json:"pollSeconds,omitempty"`
+	// StaleSeconds: a working agent with an older last_activity, or a feed
+	// that has not been refreshed in this many seconds, shows as stale
+	// (default 180). Negative turns the check off.
+	StaleSeconds int `json:"staleSeconds,omitempty"`
 }
 
 type Daemon struct {
@@ -58,6 +108,8 @@ type Daemon struct {
 	orca      orcaWatch
 	herdr     herdrWatch
 	cmux      cmuxWatch
+	cursor    cursorWatch
+	feed      feedWatch
 	front     string // tmux session of the focused terminal (last tick)
 
 	lastAutoRestore time.Time

@@ -89,8 +89,11 @@ The full state is small (≤ a few KB per agent), so there are no deltas.
   "lost": false,                  // omitted when false: ended with the tmux server (crash, reboot), not by itself; POST /v1/restore brings it back
   "unseen": false,                // finished a turn nobody has looked at yet ("hungry"); cleared when its terminal is focused or it gets a new prompt
   "external": false,              // mirrored from another app (a Codex app thread): focus opens it there, dismiss hides it; answer/interrupt/resume return an error
-  "app": "orca",                  // omitted for agentctl's own: the app an external agent runs in: "orca" (the Orca app), "herdr" or "cmux";
-                                  // focus switches to its terminal there, answer and interrupt work; dismiss hides it until it's active
+  "app": "orca",                  // omitted for agentctl's own: the app an external agent runs in: "orca" (the Orca app), "herdr", "cmux",
+                                  // "cursor", or a remote feed's name ("grok").
+                                  // orca, herdr and cmux: focus switches to its terminal, answer and interrupt work.
+                                  // cursor and a remote feed: focus opens the agent's page; answer and interrupt are refused.
+                                  // dismiss hides it until it's active
   "hat": { "shape": "propeller", "color": "blue", "auto": true }, // omitted when none: the pixel hat for its working folder;
                                   // shape: hard hat, cap, beanie, helmet, wizard, beret, chef, crown, headphones,
                                   // propeller, top hat, cowboy, bandana · color: teal, blue, yellow, green, purple,

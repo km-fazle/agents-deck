@@ -245,15 +245,33 @@ void main() {
             },
             {'id': 'l1', 'status': 'idle', 'tool': 'claude', 'external': true},
             {'id': 'c1', 'status': 'idle', 'tool': 'codex', 'external': true},
+            {
+              'id': 'u1',
+              'status': 'running',
+              'tool': 'cursor',
+              'external': true,
+              'app': 'cursor',
+              'activity': {'tool': 'cloud', 'detail': 'acme/payments · cursor/fix-auth'},
+            },
+            {
+              'id': 'g1',
+              'status': 'waiting',
+              'tool': 'grok',
+              'external': true,
+              'app': 'grok',
+            },
           ],
         });
-        final [orca, watched, codex] = s.agents;
+        final [orca, watched, codex, cloud, grok] = s.agents;
         expect(
-          (orca.inApp, orca.watched, orca.codexThread),
-          (true, false, false),
+          (orca.inApp, orca.interactiveApp, orca.watched, orca.codexThread),
+          (true, true, false, false),
         );
         expect((watched.inApp, watched.watched), (false, true));
         expect(codex.codexThread, isTrue);
+        expect((cloud.inApp, cloud.interactiveApp), (true, false));
+        expect(agentMetaLine(cloud, s), 'acme/payments · cursor/fix-auth');
+        expect((grok.inApp, grok.interactiveApp), (true, false));
       },
     );
 

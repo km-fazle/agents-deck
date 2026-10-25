@@ -1552,7 +1552,7 @@ type Agent struct {
 	SubagentCount uint32                 `protobuf:"varint,30,opt,name=subagent_count,json=subagentCount,proto3" json:"subagent_count,omitempty"` // len(subagents), sent with TILE so a small board can show it
 	StartedAtMs   int64                  `protobuf:"varint,31,opt,name=started_at_ms,json=startedAtMs,proto3" json:"started_at_ms,omitempty"`
 	UpdatedAtMs   int64                  `protobuf:"varint,32,opt,name=updated_at_ms,json=updatedAtMs,proto3" json:"updated_at_ms,omitempty"`
-	App           string                 `protobuf:"bytes,33,opt,name=app,proto3" json:"app,omitempty"`         // the app it runs in when not agentctl's: "orca", "herdr", "cmux"
+	App           string                 `protobuf:"bytes,33,opt,name=app,proto3" json:"app,omitempty"`         // the app it runs in when not agentctl's: "orca", "herdr", "cmux", "cursor", or a remote feed ("grok")
 	Account       *Account               `protobuf:"bytes,34,opt,name=account,proto3" json:"account,omitempty"` // the Claude account it runs in; unset while only one is set up
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache

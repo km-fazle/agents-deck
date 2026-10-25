@@ -678,6 +678,8 @@ class _AgentDetailState extends State<AgentDetail> {
           child: Text(
             _flashKey == 'focus' && _flash == _Flash.sent
                 ? 'focused'
+                : a.app.isNotEmpty && !a.interactiveApp
+                ? 'open in ${a.app}'
                 : 'focus terminal',
             style: DeckHud.mono(size: 15, color: color).copyWith(
               decoration: TextDecoration.underline,
@@ -865,7 +867,7 @@ class _AgentDetailState extends State<AgentDetail> {
                     pressedInk: DeckHud.bg,
                   ),
                 ),
-              if (running && (!a.external || a.inApp)) ...[
+              if (running && (!a.external || a.interactiveApp)) ...[
                 const SizedBox(width: 14),
                 SizedBox(
                   width: 200,
@@ -1354,7 +1356,10 @@ class _AgentDetailState extends State<AgentDetail> {
           ],
           const Spacer(),
           Text(
-            _note ?? 'free-text answer · type it at the terminal',
+            _note ??
+                (a.app.isNotEmpty && !a.interactiveApp
+                    ? 'answer it on its page'
+                    : 'free-text answer · type it at the terminal'),
             key: _note == null ? null : const Key('agent-note'),
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
@@ -1372,7 +1377,14 @@ class _AgentDetailState extends State<AgentDetail> {
                 pressedFill: DeckHud.ink,
                 pressedInk: DeckHud.bg,
               ),
-              Expanded(child: _terminalButton(a, 'focus terminal')),
+              Expanded(
+                child: _terminalButton(
+                  a,
+                  a.app.isNotEmpty && !a.interactiveApp
+                      ? 'open in ${a.app}'
+                      : 'focus terminal',
+                ),
+              ),
             ],
           ),
         ],
