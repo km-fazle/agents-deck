@@ -78,7 +78,11 @@ const poseOf = (a) => {
 // another terminal that you added to the deck ("watched").
 const codexThread = (a) => a.external && a.tool === 'codex' && !a.app;
 const watched = (a) => a.external && a.tool === 'claude' && !a.app;
-const inApp = (a) => !!a.app; // runs in another app (Orca, herdr): answer, interrupt and focus work there
+const inApp = (a) => !!a.app; // runs somewhere else: focus says "open in <app>"
+// Orca, herdr and cmux take an answer and an interrupt. Cursor and a remote
+// feed (Grok) only open a page.
+const interactiveApp = (a) => a.app === 'orca' || a.app === 'herdr' || a.app === 'cmux';
+const openLabel = (a, fallback) => (a.app && !interactiveApp(a)) ? `open in ${a.app}` : fallback;
 
 const needsYou = (a) => a.status === 'waiting' || a.status === 'error';
 
@@ -88,7 +92,15 @@ const hungry = (a) => a.status === 'idle' && a.unseen;
 function tileMeta(a) {
   if (hungry(a)) return 'hungry · feed me';
   switch (a.status) {
-    case 'running': return `${verb(a.activity?.tool)} · ${ctxPct(a)}% ctx`;
+    case 'running': {
+      // Cloud and feed agents have no context window. Show what they're doing
+      // instead of "0% ctx".
+      if (!(a.context?.window > 0)) {
+        const d = (a.activity?.detail || '').trim();
+        return d || 'working';
+      }
+      return `${verb(a.activity?.tool)} · ${ctxPct(a)}% ctx`;
+    }
     case 'waiting': {
       const w = a.waiting || {};
       if (w.kind === 'permission') {
@@ -1088,7 +1100,7 @@ function buildInfo(a) {
   const actions = h('div', { class: 'actions' });
   if (a.status !== 'exited') actions.append(actionButton(a, codexThread(a) ? 'open in codex' : inApp(a) ? `open in ${a.app}` : hungry(a) ? 'review in terminal' : 'focus terminal', 'focus', 'solid', note));
   else if (a.resumable) actions.append(actionButton(a, 'resume', 'resume', 'solid', note));
-  if (a.status === 'running' && (!a.external || inApp(a))) actions.append(actionButton(a, 'interrupt', 'interrupt', 'narrow', note));
+  if (a.status === 'running' && (!a.external || interactiveApp(a))) actions.append(actionButton(a, 'interrupt', 'interrupt', 'narrow', note));
   else actions.append(removeButton(a, note));
   if (a.tool === 'claude' && a.account) for (const acc of accounts) if (acc.name !== a.account.name) actions.append(handoffButton(a, acc, note));
 
@@ -1195,7 +1207,7 @@ function buildPrompt(a) {
     sendBtn.addEventListener('click', () => selected && answer(selected));
     kids.push(h('h3', { class: 'p-title', id: 'p-title', text: w.title }));
     if (w.detail) kids.push(h('span', { class: 'val', text: w.detail }));
-    kids.push(h('div', { class: 'sec grow' }, optList), h('div', { class: 'actions' }, sendBtn, focusBtn('narrow', 'type in terminal')), note);
+    kids.push(h('div', { class: 'sec grow' }, optList), h('div', { class: 'actions' }, sendBtn, focusBtn('narrow', openLabel(a, 'type in terminal'))), note);
   } else {
     panel.className = 'detail p-accent';
     kids.push(h('div', { class: 'sec' },
@@ -1203,11 +1215,13 @@ function buildPrompt(a) {
       w.detail ? h('pre', { class: 'codeblock', tabindex: '0', 'aria-label': 'prompt detail', text: w.detail }) : null,
       w.context ? h('span', { class: 'lbl', text: w.context }) : null));
     if (w.kind === 'input' || !w.options.length) {
-      kids.push(h('div', { class: 'sec grow' }, h('span', { class: 'val', text: 'the agent wants free-text input — answer it in its terminal.' })),
-        h('div', { class: 'actions' }, focusBtn('solid', 'focus terminal')), note);
+      const readOnly = a.app && !interactiveApp(a);
+      kids.push(h('div', { class: 'sec grow' }, h('span', { class: 'val', text: readOnly ? 'answer it on its page.' : 'the agent wants free-text input — answer it in its terminal.' })),
+        h('div', { class: 'actions' }, focusBtn('solid', openLabel(a, 'focus terminal'))), note);
     } else {
-      const fb = h('button', { type: 'button', class: 'linkbtn', text: 'focus terminal' });
-      fb.addEventListener('click', async () => { const r = await postAction(a, 'focus'); note.className = r.ok ? 'note' : 'note bad'; note.textContent = r.ok ? 'focus terminal · sent' : `focus failed · ${r.error}`; });
+      const fbLabel = openLabel(a, 'focus terminal');
+      const fb = h('button', { type: 'button', class: 'linkbtn', text: fbLabel });
+      fb.addEventListener('click', async () => { const r = await postAction(a, 'focus'); note.className = r.ok ? 'note' : 'note bad'; note.textContent = r.ok ? `${fbLabel} · sent` : `focus failed · ${r.error}`; });
       kids.push(h('div', { class: 'sec grow' }, optList),
         h('div', { class: 'foot-row' }, h('span', { text: 'answer here or at the terminal' }), fb), note);
     }

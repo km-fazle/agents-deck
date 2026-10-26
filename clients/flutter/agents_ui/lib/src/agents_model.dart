@@ -362,9 +362,13 @@ class Agent {
   /// agentctl's own and plain mirrors.
   final String app;
 
-  /// An agent running in another app (Orca, herdr): focus opens its terminal
-  /// there, and answer and interrupt work from the deck.
+  /// An agent running somewhere else. Focus says "open in <app>".
   bool get inApp => app.isNotEmpty;
+
+  /// Answer and interrupt work (Orca, herdr, cmux). Cursor and a remote feed
+  /// only open a page.
+  bool get interactiveApp =>
+      app == 'orca' || app == 'herdr' || app == 'cmux';
 
   /// A Codex app thread (view and open in the app only).
   bool get codexThread => external && tool == 'codex' && app.isEmpty;
@@ -554,6 +558,13 @@ String tildePath(String path) {
 String agentMetaLine(Agent a, AgentsState state, [DateTime? localNow]) {
   switch (a.status) {
     case AgentStatus.running:
+      // Cloud and feed agents have no context window. Show what they're
+      // doing instead of "0% ctx".
+      if (a.contextWindow <= 0) {
+        final d = a.activity?.detail.trim() ?? '';
+        if (d.isNotEmpty) return d;
+        return 'working';
+      }
       final verb = a.activity?.verb;
       return '${verb == null || verb.isEmpty ? 'working' : verb}'
           ' · ${a.contextPercent}% ctx';

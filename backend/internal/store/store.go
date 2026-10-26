@@ -36,6 +36,9 @@ type Entry struct {
 	HerdrTurn     int64       `json:"-"`                  // …state_change_seq of the state its prompt was built for
 	CmuxSurface   string      `json:"-"`                  // an agent in cmux: its terminal (surface id)
 	CmuxTurn      float64     `json:"-"`                  // …updatedAt of the hook report its prompt was built for
+	OpenURL       string      `json:"-"`                  // a cloud or feed agent: the page focus opens
+	FeedSource    string      `json:"-"`                  // a remote-feed agent: its source slug
+	RemoteToken   string      `json:"-"`                  // fingerprint last applied (hide, and the open prompt)
 
 	// Transcript accounting (rebuilt from the file on restart).
 	Offset  int64               `json:"-"`

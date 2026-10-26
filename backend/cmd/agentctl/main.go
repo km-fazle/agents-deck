@@ -980,6 +980,8 @@ func serve(args []string) error {
 		go d.WatchOrca()
 		go d.WatchHerdr()
 		go d.WatchCmux()
+		go d.WatchCursor()
+		go d.WatchRemoteFeed()
 		go d.WatchLive()
 		ctl, lc = d, d
 	}

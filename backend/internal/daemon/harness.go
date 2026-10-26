@@ -32,6 +32,11 @@ func (d *Daemon) harnessOf(e store.Entry) (harness, bool) {
 		return harness{d.herdrSend, d.herdrInterrupt, d.herdrFocus, d.herdrHide}, true
 	case "cmux":
 		return harness{d.cmuxSend, d.cmuxInterrupt, d.cmuxFocus, d.cmuxHide}, true
+	case "cursor":
+		return harness{d.cursorSend, d.cursorInterrupt, d.cursorFocus, d.cursorHide}, true
+	}
+	if e.FeedSource != "" {
+		return harness{d.feedSend, d.feedInterrupt, d.feedFocus, d.feedHide}, true
 	}
 	return harness{}, false
 }

@@ -33,6 +33,8 @@ agents deck is a status board, not a harness. If you already run your agents in 
 | [herdr](https://herdr.dev) | agents in herdr's panes, in every herdr session that's running |
 | [cmux](https://cmux.com) | Claude agents in cmux's terminals, while cmux is open (answering from the deck needs one cmux setting, see [features](docs/features.md#cmux)) |
 | Codex app and Codex CLI | threads from the last 6 hours, read-only |
+| [Cursor](https://cursor.com) cloud agents | cloud agents from the Cursor API, with an API key (read-only; open jumps to the agent's page) |
+| a remote feed (Grok bots) | agents from a JSON status file or https URL you publish |
 | agentctl (built in) | agents it starts with `agentctl new`, each in a tmux session with a status header |
 | Claude Code on its own | sessions you started by hand in any terminal, once you add them |
 
@@ -134,13 +136,14 @@ Each agent gets its own hook settings, so your global `~/.claude/settings.json` 
 
 ## Security & privacy
 
-- **Nothing leaves your machine:** no telemetry, no update checks. The only Go dependency is Google's protobuf module.
+- **No telemetry and no update checks.** The only Go dependency is Google's protobuf module. The optional Cursor and remote-feed polls below are the only calls the daemon adds.
 - **The web dashboard is loopback-only,** behind a one-time login link, a strict CSP and host and origin checks.
 - **The menu bar app** uses the daemon's unix socket: nothing crosses the network.
 - **The desk panel** connects over TLS 1.3 with its own client certificate, signed by the deck's local CA (its key is in the macOS Keychain). Each device has a scope (view, act or admin), shows up in `agentctl devices`, can be revoked on its own, and every action it takes lands in an audit log.
 - **Serial boards** have to be registered (`agentctl link add`) and approved once (`agentctl devices approve`), start with view-only access, and are logged and revocable like the panel.
 - **Codex files are only read.** App control is a single Apple event (asking iTerm for its API cookie): no synthetic keystrokes, no screen reading.
 - **Secrets** live in `~/.local/share/agents-terminal/` (`0700` / `0600`).
+- **Cursor cloud agents and a remote feed are optional.** With an API key set, the daemon polls `https://api.cursor.com` and sends the key only there (Basic auth, never logged). A remote feed polls the https URL or local file you set, with a bearer token only if you configured one. Nothing else is added to the network.
 
 ## Credits
 
@@ -148,7 +151,7 @@ The per-project pixel hats were inspired by [“9 NEW Claude Mods that can truly
 
 ## Docs
 
-[Features](docs/features.md) · [Protocol](docs/protocol.md) · [Deck Link](docs/link/protocol.md) · [New device](docs/link/new-device.md) · [Releasing](docs/releasing.md) · [Roadmap](docs/roadmap.md)
+[Features](docs/features.md) · [Protocol](docs/protocol.md) · [Remote feed](docs/remote-feed.md) · [Deck Link](docs/link/protocol.md) · [New device](docs/link/new-device.md) · [Releasing](docs/releasing.md) · [Roadmap](docs/roadmap.md)
 
 | path | |
 |---|---|

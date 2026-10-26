@@ -1,0 +1,48 @@
+{
+  "source": "Grok",
+  "fetched_at": "2026-10-25T12:00:00Z",
+  "agents": [
+    {
+      "id": "inbox",
+      "name": "Inbox triage",
+      "group": "ops",
+      "status": "working",
+      "summary": "Reading the latest thread",
+      "last_activity": "2026-10-25T12:00:00Z",
+      "open_url": "https://example.com/bots/inbox"
+    },
+    {
+      "id": "review",
+      "name": "Review queue",
+      "group": "ops",
+      "status": "needs_input",
+      "summary": "Which draft should go out?",
+      "last_activity": "2026-10-25T11:59:00Z",
+      "open_url": "https://example.com/bots/review"
+    },
+    {
+      "id": "digest",
+      "name": "Morning digest",
+      "group": "ops",
+      "status": "idle",
+      "summary": "Sent the digest",
+      "last_activity": "2026-10-25T11:30:00Z"
+    },
+    {
+      "id": "pager",
+      "name": "Pager",
+      "group": "ops",
+      "status": "error",
+      "summary": "The mailbox refused the login",
+      "last_activity": "2026-10-25T11:58:00Z"
+    },
+    {
+      "id": "archive",
+      "name": "Archive",
+      "group": "ops",
+      "status": "working",
+      "summary": "Still packing old threads",
+      "last_activity": "2026-10-25T09:00:00Z"
+    }
+  ]
+}

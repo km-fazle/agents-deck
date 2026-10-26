@@ -218,7 +218,7 @@ typedef struct _agentsdeck_link_v1_Agent {
     uint32_t subagent_count; /* len(subagents), sent with TILE so a small board can show it */
     int64_t started_at_ms;
     int64_t updated_at_ms;
-    char app[12]; /* the app it runs in when not agentctl's: "orca", "herdr", "cmux" */
+    char app[12]; /* the app it runs in when not agentctl's: "orca", "herdr", "cmux", "cursor", or a remote feed ("grok") */
     bool has_account;
     agentsdeck_link_v1_Account account; /* the Claude account it runs in; unset while only one is set up */
 } agentsdeck_link_v1_Agent;
